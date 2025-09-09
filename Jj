@@ -1,66 +1,51 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+
 local player = Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
-local hum = char:WaitForChild("Humanoid")
 local hrp = char:WaitForChild("HumanoidRootPart")
+local clone = nil -- เก็บโคลนที่สร้าง
 
--- สร้าง GUI ปุ่ม
+-- สร้าง GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 150, 0, 50)
-button.Position = UDim2.new(0.05, 0, 0.1, 0)
-button.Text = "⚡ เปิดฟังก์ชัน"
-button.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
-button.TextColor3 = Color3.fromRGB(255, 255, 255)
-button.Parent = screenGui
-button.Visible = true
+-- ปุ่มโคลน
+local cloneButton = Instance.new("TextButton")
+cloneButton.Size = UDim2.new(0, 150, 0, 50)
+cloneButton.Position = UDim2.new(0, 50, 0, 50)
+cloneButton.Text = "Clone Me"
+cloneButton.Parent = screenGui
 
--- ตัวแปร state
-local enabled = false
-local isFloating = false
-local originalPosition = nil
-local floatHeight = 30
+-- ปุ่มสลับตัว
+local swapButton = Instance.new("TextButton")
+swapButton.Size = UDim2.new(0, 150, 0, 50)
+swapButton.Position = UDim2.new(0, 50, 0, 120)
+swapButton.Text = "Swap With Clone"
+swapButton.Parent = screenGui
 
--- ฟังก์ชันเปิด/ปิด
-button.MouseButton1Click:Connect(function()
-	enabled = not enabled
-	if enabled then
-		button.Text = "✅ เปิดฟังก์ชัน"
-		button.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
-	else
-		button.Text = "⚡ เปิดฟังก์ชัน"
-		button.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
-		if isFloating and originalPosition then
-			hrp.CFrame = originalPosition
-			isFloating = false
-		end
-	end
+-- ฟังก์ชันโคลน
+cloneButton.MouseButton1Click:Connect(function()
+    if char and hrp then
+        if clone then
+            clone:Destroy()
+        end
+        clone = char:Clone()
+        clone.Parent = workspace
+        -- วาง clone ข้างหน้า 3 สตั้ด
+        clone:SetPrimaryPartCFrame(hrp.CFrame * CFrame.new(0,0,-3))
+    end
 end)
 
--- Heartbeat loop จำลอง state machine / logic ของ obfuscated
-RunService.Heartbeat:Connect(function()
-	if enabled then
-		local hp = hum.Health
-		
-		-- State machine ตัวอย่าง (เหมือน e,W ในโค้ด obfuscated)
-		if hp <= 10 then
-			if not isFloating then
-				originalPosition = hrp.CFrame
-				isFloating = true
-			end
-			hrp.CFrame = CFrame.new(originalPosition.Position + Vector3.new(0,floatHeight,0))
-		elseif hp >= 12 and isFloating and originalPosition then
-			hrp.CFrame = originalPosition
-			isFloating = false
-		end
-
-		-- ตัวอย่าง logic เพิ่มเติมจาก obfuscated
-		-- เช่น แก้ไข table หรือเรียก function ของ object
-		-- local t = {1,2,3}
-		-- t[1] = t[1] + 1
-		-- สามารถต่อยอดทำ automation / state update ได้
-	end
+-- ฟังก์ชันสลับตัว
+swapButton.MouseButton1Click:Connect(function()
+    if clone and clone.PrimaryPart then
+        -- เก็บตำแหน่ง clone
+        local cloneCFrame = clone.PrimaryPart.CFrame
+        -- ย้ายตัวเองไปตำแหน่ง clone
+        hrp.CFrame = cloneCFrame
+        -- ลบ clone
+        clone:Destroy()
+        clone = nil
+    end
 end)
